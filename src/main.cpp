@@ -1,5 +1,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+// #include "IRremote.hpp"
+// #include "IRSend.hpp"
 
 #define PUB_TOPIC "data" 
 #define SUB_TOPIC "test"
@@ -15,39 +17,29 @@ const char* mqtt_server = "192.168.1.2";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-void reconnect();
+void connectBroker();
 void callback(char* topic, byte *payload, unsigned int length);
 void connect_to_broker();
+void connectWifi (void);
 
 void setup() {
   Serial.begin(9600);
   pinMode(LED_SENSE, OUTPUT);
   pinMode(LED_START, OUTPUT);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.printf("IP address: %s",WiFi.localIP());
-  // Serial.println(WiFi.localIP());
+  connectWifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  reconnect();
-  // connect_to_broker();
+  connectBroker();
 }
 
 void loop() {
   client.loop();
   if (!client.connected()) {
-    reconnect();
+    connectBroker();
   }
-  // client.publish("test", "2400,600,1200,600,1200,600,1200,650,550,650,1150,650,550,650,600,550,1250,550,650,550,650,550,650,600,600");
-  // delay(5000);
 }
 
-void reconnect() {
+void connectBroker() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     if (client.connect("ESP32Client")) {
@@ -72,21 +64,13 @@ void callback(char* topic, byte *payload, unsigned int length) {
   Serial.println();
 }
 
-void connect_to_broker() {
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    String clientId = "slave";
-
-    if (client.connect(clientId.c_str())) {
-      Serial.println("connected");
-      client.subscribe(SUB_TOPIC);
-    } 
-    
-    else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 3 seconds");
-      delay(3000);
-    }
+void connectWifi (void){
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.printf("IP address: %s",WiFi.localIP());
 }
