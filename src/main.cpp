@@ -1,8 +1,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "IRremote.hpp"
-// #include "IRSend.h"
-// #include <IRremoteESP8266.h>
 
 #define PUB_TOPIC "data" 
 #define SUB_TOPIC "test"
@@ -15,11 +13,8 @@ const char* password = "doimatkhauroi";
 // const char* ssid = "P407";
 // const char* password = "17052000";
 const char* mqtt_server = "192.168.88.108";
-// const char* mqtt_server = "192.168.1.2";
-// uint16_t raw_data[200] = { 0 };
-bool send_rawData = true;
+// const char* mqtt_server = "192.168.1.2";      
 int i=0;
-// int count_element = 0;
 
 void handleData(char str[]);
 void showArray (int size_array);
@@ -83,8 +78,6 @@ void callback(char* topic, byte *payload, unsigned int length) {
   }
   Serial.printf("  Data = %s\n",data);
   handleData(data);
-  // sendRawData(&data_recieve);
-  
 }
 
 void connectWifi (void){
@@ -99,7 +92,6 @@ void connectWifi (void){
 }
 
 void handleData(char str[]){
-  // char str[] = "";
   int size_array = countElement(str);
   printf("Size = %d\n", size_array);
   char* token;
@@ -108,18 +100,16 @@ void handleData(char str[]){
 
   token = strtok(str, ",");
   while (token != NULL) {
-      // printf("\tSplit: %s\t", token);
       stringToUint16(token,size_array);
       token = strtok(NULL, ",");
   }
-  // showArray(size_array);
+  IrSender.sendRaw(data_recieve,size_array, 38);
   free(data_recieve);
 }
 
 void stringToUint16(char s[], int sizeArray) {
   unsigned int num = strtoul(s, NULL, 10);
   uint16_t num16 = (uint16_t)num;
-  // printf("After convert: %u\t", num16);
   data_recieve[i] = num16;
   printf("rawdata[%d] = %u\n", i,data_recieve[i]);
   // i++;
@@ -127,9 +117,6 @@ void stringToUint16(char s[], int sizeArray) {
     i=0;
   else 
     i++;
-
-  IrSender.sendRaw(data_recieve,31, 38);
-  // sendRawData(data_recieve);
 }
 
 void showArray (int size_array){
@@ -139,7 +126,6 @@ void showArray (int size_array){
 }
 
 int countElement (char s[]){
-  // const char* c = ",";
   int count_element = 0;
   for(int i=0;i<strlen(s); i++){
       if(s[i] == ','){
@@ -152,8 +138,5 @@ int countElement (char s[]){
 void sendRawData (const uint16_t* rawData)
 {
   int rawDataSize = sizeof(rawData) / sizeof(uint16_t);
-  if(send_rawData){
-    IrSender.sendRaw(rawData,31, 38);
-    // send_rawData = false;
-  }
+  IrSender.sendRaw(rawData,31, 38);
 }
