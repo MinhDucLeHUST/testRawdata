@@ -10,12 +10,12 @@
 #define LED_SEND 15           // Config LED to send IR signal
 #define LED_RECIEVE 13        // Config LED to receive IR signal
 
-// const char* ssid = "CAM_TEST_EN";
-// const char* password = "doimatkhauroi";
-const char* ssid = "P407";
-const char* password = "17052000";
-// const char* mqtt_server = "192.168.88.108";
-const char* mqtt_server = "192.168.1.2";      
+const char* ssid = "CAM_TEST_2";
+const char* password = "1234567890";
+// const char* ssid = "P407";
+// const char* password = "17052000";
+const char* mqtt_server = "192.168.88.184";
+// const char* mqtt_server = "192.168.1.2";      
 int i=0;
 
 void handleData(char str[]);
@@ -144,7 +144,7 @@ void receiveData (){
     }
     // Serial.printf("Data = %", temp.substring(0,temp.length()-1));
     Serial.printf("\nLength = %d\n", rawlen);
-    Serial.printf("Name of protocol: %s", ProtocolNames[IrReceiver.decodedIRData.protocol]);
+    Serial.printf("Name of protocol: %s\n", ProtocolNames[IrReceiver.decodedIRData.protocol]);
     IrReceiver.resume(); // Enable receiving of the next value
   }
 }
