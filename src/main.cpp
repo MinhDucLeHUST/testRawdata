@@ -10,13 +10,14 @@
 #define LED_SEND 15           // Config LED to send IR signal
 #define LED_RECIEVE 13        // Config LED to receive IR signal
 
-const char* ssid = "CAM_TEST_2";
-const char* password = "1234567890";
+const char* ssid = "CAM_TEST_EN";
+const char* password = "doimatkhauroi";
 // const char* ssid = "P407";
 // const char* password = "17052000";
-const char* mqtt_server = "192.168.88.184";
+const char* mqtt_server = "192.168.88.108";
 // const char* mqtt_server = "192.168.1.2";      
 int i=0;
+int numberOfElements = 0;
 
 void handleData(char str[]);
 void stringToUint16(char s[], int sizeArray);
@@ -24,20 +25,16 @@ int countElement (char s[]);
 uint16_t *data_recieve;
 void connectBroker();
 void callback(char* topic, byte *payload, unsigned int length);
-void connect_to_broker();
 void connectWifi (void);
-void receiveData ();
+void receiveData (int num);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-// IRsend irsend;
 
 void setup() {
   Serial.begin(9600);
   IrSender.begin(LED_SEND);
   IrReceiver.begin(LED_RECIEVE,ENABLE_LED_FEEDBACK);
-  // IrReceiver.enableIRIn();
-  // irsend.begin(15);
   pinMode(LED_SENSE, OUTPUT);
   pinMode(LED_START, OUTPUT);
   connectWifi();
@@ -51,7 +48,8 @@ void loop() {
   if (!client.connected()) {
     connectBroker();
   }
-  receiveData();
+  // int value = countElement();
+  // receiveData(numberOfElements);
 }
 
 void connectBroker() {
@@ -72,17 +70,17 @@ void connectBroker() {
 void callback(char* topic, byte *payload, unsigned int length) {
   char data[1000];
   Serial.println("\n-------New message from broker-----");
-  Serial.print("Topic: ");
-  Serial.println(topic);
-  Serial.print("Message: ");
-  Serial.write(payload, length);
+  // Serial.print("Topic: ");
+  // Serial.println(topic);
+  // Serial.print("Message: ");
+  // Serial.write(payload, length);
   Serial.println();
   for(int i=0; i<length;i++){
     data[i] = *(payload+i);
   }
-  Serial.printf("  Data = %s\n",data);
+  // Serial.printf("  Data = %s\n",data);
   handleData(data);
-  
+  receiveData(numberOfElements);
 }
 
 void connectWifi (void){
@@ -98,7 +96,7 @@ void connectWifi (void){
 
 void handleData(char str[]){
   int size_array = countElement(str);
-  printf("Size = %d\n", size_array);
+  // printf("Size = %d\n", size_array);
   char* token;
 
   data_recieve = (uint16_t*) calloc(size_array, sizeof(uint16_t));
@@ -109,6 +107,7 @@ void handleData(char str[]){
       token = strtok(NULL, ",");
   }
   IrSender.sendRaw(data_recieve,size_array, 38);
+  numberOfElements = size_array;
   free(data_recieve);
 }
 
@@ -116,7 +115,8 @@ void stringToUint16(char s[], int sizeArray) {
   unsigned int num = strtoul(s, NULL, 10);
   uint16_t num16 = (uint16_t)num;
   data_recieve[i] = num16;
-  printf("rawdata[%d] = %u\n", i,data_recieve[i]);
+  // printf("rawdata[%d] = %u\t", i,data_recieve[i]);
+  // printf("%u  ", data_recieve[i]);
   if(i >= sizeArray-1)
     i=0;
   else 
@@ -133,18 +133,26 @@ int countElement (char s[]){
   return count_element+1;
 }
 
-void receiveData (){
-  String temp = "";
+void receiveData (int num){
+  Serial.printf("\nDInside receiveData function\n");
   if (IrReceiver.decode()) {
     int rawlen = IrReceiver.decodedIRData.rawDataPtr->rawlen-1;
-    uint8_t rawCode[RAW_BUFFER_LENGTH];
-    IrReceiver.compensateAndStoreIRResultInArray(rawCode);
-    for (int i = 0; i < rawlen; i++) {
-      printf("%u ", rawCode[i]);
+    Serial.printf("\nLength of array = %d", num);
+    Serial.printf("\nLength = %d", rawlen);
+    if(num == rawlen){
+      uint8_t rawCode[RAW_BUFFER_LENGTH];
+      IrReceiver.compensateAndStoreIRResultInArray(rawCode);
+      // for (int i = 0; i < rawlen; i++) {
+      //   printf("%u ", rawCode[i]);
+      // } 
+      // Serial.printf("Data = %", temp.substring(0,temp.length()-1));
+      Serial.printf("\n[Protocol] %s - [Address] %hu - [Command] %hu\n", ProtocolNames[IrReceiver.decodedIRData.protocol],ProtocolNames[IrReceiver.decodedIRData.address],ProtocolNames[IrReceiver.decodedIRData.command]); 
     }
-    // Serial.printf("Data = %", temp.substring(0,temp.length()-1));
-    Serial.printf("\nLength = %d\n", rawlen);
-    Serial.printf("Name of protocol: %s\n", ProtocolNames[IrReceiver.decodedIRData.protocol]);
-    IrReceiver.resume(); // Enable receiving of the next value
+    else{
+      Serial.printf("\nName of protocol: %s\n", ProtocolNames[IrReceiver.decodedIRData.protocol]); 
+      printf("The signal was noise! Try again...\n");
+    }
+     // Enable receiving of the next value
   }
+  IrReceiver.resume();
 }
