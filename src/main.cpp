@@ -49,7 +49,7 @@ void loop() {
     connectBroker();
   }
   // int value = countElement();
-  // receiveData(numberOfElements);
+  receiveData(numberOfElements);
 }
 
 void connectBroker() {
@@ -80,7 +80,7 @@ void callback(char* topic, byte *payload, unsigned int length) {
   }
   // Serial.printf("  Data = %s\n",data);
   handleData(data);
-  receiveData(numberOfElements);
+  // receiveData(numberOfElements);
 }
 
 void connectWifi (void){
@@ -134,8 +134,9 @@ int countElement (char s[]){
 }
 
 void receiveData (int num){
-  Serial.printf("\nDInside receiveData function\n");
+  // Serial.printf("\nInside receiveData function\n");
   if (IrReceiver.decode()) {
+    Serial.printf("State = %d\n", IrReceiver.decode());
     int rawlen = IrReceiver.decodedIRData.rawDataPtr->rawlen-1;
     Serial.printf("\nLength of array = %d", num);
     Serial.printf("\nLength = %d", rawlen);
@@ -147,12 +148,13 @@ void receiveData (int num){
       // } 
       // Serial.printf("Data = %", temp.substring(0,temp.length()-1));
       Serial.printf("\n[Protocol] %s - [Address] %hu - [Command] %hu\n", ProtocolNames[IrReceiver.decodedIRData.protocol],ProtocolNames[IrReceiver.decodedIRData.address],ProtocolNames[IrReceiver.decodedIRData.command]); 
+      IrReceiver.printIRResultShort(&Serial);
     }
     else{
       Serial.printf("\nName of protocol: %s\n", ProtocolNames[IrReceiver.decodedIRData.protocol]); 
       printf("The signal was noise! Try again...\n");
     }
-     // Enable receiving of the next value
+    IrReceiver.resume();
   }
-  IrReceiver.resume();
+  // Serial.printf("State = %d\n", IrReceiver.decode());
 }
